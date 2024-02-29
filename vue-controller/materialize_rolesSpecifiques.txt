@@ -1,0 +1,99 @@
+<?php if (!defined('BASEPATH')) { exit('No direct script access allowed'); } ?>
+
+<?php
+$thead = array();
+$thead[] = array( 'label' => '', 'extra' => 'data-tableexport-display="none"' );
+$thead[] = array('label' => 'Id', 'data' => 'id', 'type' => 'text');
+$thead[] = array('label' => 'Nombre d\'utilisateurs', 'data' => 'nb', 'type' => 'int');
+$thead[] = array('label' => 'Action faite par', 'data' => 'createdBy', 'type' => 'text');
+$thead[] = array('label' => 'Création', 'data' => 'dateCreation', 'type' => 'date');
+$thead[] = array('label' => 'Dernière modif. faite par', 'data' => 'lastUpdateBy', 'type' => 'text');
+$thead[] = array('label' => 'Dernière modif.', 'data' => 'dateLastUpdate', 'type' => 'date');
+$thead[] = array('label' => 'Actif ?', 'data' => 'active', 'type' => 'boolean');
+$nbColumns = sizeof($thead);
+?>
+
+<div class="row">
+    <div class="col s6 offset-s3" id="infoRolesBlock"></div>
+</div>
+
+<?= drawTable($tableId, $thead, $roles, 'Liste des rôles spécifiques'); ?>
+
+<script>
+    data.init = function () {
+        this.roles = <?= json_encode($roles) ?>;
+        this.count = <?= count($roles) ?>;
+        this.drawActionsBlock();
+        this.draw();
+    };
+
+    data.drawActionsBlock = function()
+    {
+        var html = '';
+
+        html += drawBtn( 'retour', '<?= base_url() ?>dev_tools' );
+        html += drawBtn( 'creer', '<?= base_url() ?>dev_tools/rolesSpecifique' );
+        html += drawBtn( 'export', null, { tableId:"<?= $tableId ?>", fileName: "<?= $fileName ?>"} );
+
+        $( '#actionsBlock' ).html( html ).promise().done( function(){
+            $( '.dropdown-trigger' ).dropdown();
+        });
+    };
+
+
+    data.draw = function () {
+        $('#<?= $tableId ?> tbody').empty();
+        if (this.roles && this.roles.length > 0) {
+            var html = '<div class="card blue-grey darken-1">' +
+                '<div class="card-content white-text center">';
+                
+            html += '<b>' + this.count + '</b>';
+            html += (this.count === 1) ? ' rôle trouvé' : ' rôles trouvés.';
+            html += '</div></div>';
+            
+            $('#infoRolesBlock').html(html);
+
+            for (var i = 0; i < this.roles.length; i++) {
+                var role = this.roles[i];
+                this.drawRole(role);
+            }
+            initToggle('<?= $tableId ?>', 'roles');
+        } else {
+            var html = '<tr><td class="center" colspan="<?= $nbColumns ?>"><span class="fas fa-minus" aria-hidden="true"></span></td></tr>';
+            $('#<?= $tableId ?> tbody').append(html);
+        }
+    };
+
+    data.drawRole = function (role) {
+        //console.log(role);
+        var html = '<tr>' ;
+        html +=	'<td data-tableexport-display="none">' + drawBtn( 'voirTiny', '<?= base_url() ?>dev_tools/rolesSpecifique/' + role.id ) + '</td>' +
+                '<td>' + role.id + '</td>' +
+                '<td>' + role.nb + '</td>' +
+                '<td>' + ((role.createdBy == null) ? '<span class="grey-text"><i>A. Nonyme</i></span>' : role.createdBy.cn) + '</td>' +
+                '<td>' + moment(role.dateCreation).format("DD/MM/YYYY")  + '</td>' +
+                '<td>' + ((role.lastUpdateBy == null) ? 'A. Nonyme' : role.lastUpdateBy.cn) + '</td>' +
+                '<td>' + moment(role.dateLastUpdate).format("DD/MM/YYYY") + '</td>' ;
+
+    if (parseInt(role.active) === 1) {
+        html += '<td data-tableexport-value="Oui">' +
+                    '<div class="chip">' +
+                        '<span class="fas fa-check green-text text-darken-3" aria-hidden="true"></span> <small>Oui</small>' +
+                    '</div>' +
+                '</td>';
+    } else {
+        html += '<td data-tableexport-value="Non">' +
+                    '<div class="chip">' +
+                        '<span class="fas fa-ban amber-text text-darken-3" aria-hidden="true"></span> <small>Non</small>' +
+                    '</div>' +
+                '</td>';
+    }
+    html += '</tr>';
+
+        $('#<?= $tableId ?> tbody').append(html).promise().done(function(){
+        $('.tooltipped').tooltip();
+    });
+    };
+</script>
+
+

@@ -1,0 +1,524 @@
+<?php if(!defined('BASEPATH')){ exit('No direct script access allowed'); } 
+
+require_once( COMMONPATH.'views/includes/materialize_field.php');
+
+$thead = array();
+$thead[] = array('label' => 'UID', 'data' => 'id', 'type' => 'text');
+$thead[] = array('label' => 'Nom', 'data' => 'nom', 'type' => 'text');
+$thead[] = array('label' => 'Prénom', 'data' => 'prenom', 'type' => 'text');
+$thead[] = array('label' => 'Email', 'data' => 'email_pro', 'type' => 'text');
+$thead[] = array( 'label' => '', 'extra' => 'data-tableexport-display="none"' );
+$nbColumns = sizeof($thead);
+?>
+
+<form onsubmit="return submitHandler()">
+    <fieldset id="<?= $container ?>">
+        <legend>Informations générales</legend>
+        <div class="content"></div>
+    </fieldset>
+    <fieldset id="utilisateursContainer">
+        <legend>Personnes</legend>
+        <div class="content"><?= drawTable($tableId, $thead); ?></div>
+        <div class="row">
+<?php if ($ajoutPossible):?>
+        <div id="inputSearchPersonne" class="col s12"></div>
+<?php else : ?>
+        <p> <i class="far fa-times-circle  red lighten-1"></i><i>Cette application ne permet pas de rechercher un    utilisateur.<br>Veuillez installer le composant "select_user".</i><p>
+<?php endif;?>
+        </div>
+    </fieldset>
+</form>
+
+<script>
+    data.init = function()
+    {   this.users = <?= json_encode($users) ?>;
+        this.roleId = '<?= ( isset($roleId) ) ? $roleId : '' ?>';
+        this.edit = '<?= $edit ?>';
+        this.initContainer();
+        this.get();
+        this.getUtilisateurs ();
+
+//         this.users = [
+//     {
+//         "id": "ccdfe310-6d8f-433c-ae8b-deb10ab841c0",
+//         "text": "BARDON Mihaela -Caisse Centrale de la MSA- C10491",
+//         "img": "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAgAB4DASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAABAUBAgMG/8QAKhAAAgEDAQYGAwEAAAAAAAAAAQIDAAQREgUTITFBYSIyUYGh4SNCcZH/xAAYAQADAQEAAAAAAAAAAAAAAAAAAgMBBP/EABwRAAIDAAMBAAAAAAAAAAAAAAECAAMREhMhMf/aAAwDAQACEQMRAD8A7W5uVtwoxqdvKvrQxklfJedlz0QAAf7QF3cE7QkY8lOgdsUbAyJLAhyZH8R7DB4VwdpscjfJHlyMtvpo+KybwdVcD4IouCZLiISIeB6HmD6UtldGgaVPCUbS4z81TZU5FzKP1YavfP3RXcVcKT4YK2HJhtOExXr8OD+Ie/3UNJb3MSLNIIZEULluKsB39ad3VtHdR6H5jkR0pTLsm4Q/j0yDscH5qVtDoxKjQYrIVPg0TGSWKO3NvA281HLyYwOwFE7GgLSSSnygaf6aiDZErEGZgi9QDk04iiSGMRxjCinopdnDuMA+CaiEnTP/2Q=="
+//     },
+//     {
+//         "id": "d93ed9c8-324f-480b-bc77-f74196d7388e",
+//         "text": "MARTINEZ Marie-isabelle",
+//         ext:"Caisse Centrale de la MSA- C10322",
+//         "img": "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAgAB4DASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAABAUBAgMG/8QAKhAAAgEDAQYGAwEAAAAAAAAAAQIDAAQREgUTITFBYSIyUYGh4SNCcZH/xAAYAQADAQEAAAAAAAAAAAAAAAAAAgMBBP/EABwRAAIDAAMBAAAAAAAAAAAAAAECAAMREhMhMf/aAAwDAQACEQMRAD8A7W5uVtwoxqdvKvrQxklfJedlz0QAAf7QF3cE7QkY8lOgdsUbAyJLAhyZH8R7DB4VwdpscjfJHlyMtvpo+KybwdVcD4IouCZLiISIeB6HmD6UtldGgaVPCUbS4z81TZU5FzKP1YavfP3RXcVcKT4YK2HJhtOExXr8OD+Ie/3UNJb3MSLNIIZEULluKsB39ad3VtHdR6H5jkR0pTLsm4Q/j0yDscH5qVtDoxKjQYrIVPg0TGSWKO3NvA281HLyYwOwFE7GgLSSSnygaf6aiDZErEGZgi9QDk04iiSGMRxjCinopdnDuMA+CaiEnTP/2Q=="
+//     },
+//     {
+//         "id": "d93ed9c8-324f-480b-bc77-f74196d7388e",
+//         "text": "LUCINA MAthis",
+//         ext:"Caisse Centrale de la MSA- C10322",
+//         "img": "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAgAB4DASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAABAUBAgMG/8QAKhAAAgEDAQYGAwEAAAAAAAAAAQIDAAQREgUTITFBYSIyUYGh4SNCcZH/xAAYAQADAQEAAAAAAAAAAAAAAAAAAgMBBP/EABwRAAIDAAMBAAAAAAAAAAAAAAECAAMREhMhMf/aAAwDAQACEQMRAD8A7W5uVtwoxqdvKvrQxklfJedlz0QAAf7QF3cE7QkY8lOgdsUbAyJLAhyZH8R7DB4VwdpscjfJHlyMtvpo+KybwdVcD4IouCZLiISIeB6HmD6UtldGgaVPCUbS4z81TZU5FzKP1YavfP3RXcVcKT4YK2HJhtOExXr8OD+Ie/3UNJb3MSLNIIZEULluKsB39ad3VtHdR6H5jkR0pTLsm4Q/j0yDscH5qVtDoxKjQYrIVPg0TGSWKO3NvA281HLyYwOwFE7GgLSSSnygaf6aiDZErEGZgi9QDk04iiSGMRxjCinopdnDuMA+CaiEnTP/2Q=="
+//     },{
+//         "id": "3ef04b21-8bd2-433e-97fb-7bd4e5a4644c",
+//         "text": "MORAES Olivier",
+//         "ext" : "Caisse Centrale de la MSA- C08863",
+//         "img": "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAgAB4DASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAABAUBAgMG/8QAKhAAAgEDAQYGAwEAAAAAAAAAAQIDAAQREgUTITFBYSIyUYGh4SNCcZH/xAAYAQADAQEAAAAAAAAAAAAAAAAAAgMBBP/EABwRAAIDAAMBAAAAAAAAAAAAAAECAAMREhMhMf/aAAwDAQACEQMRAD8A7W5uVtwoxqdvKvrQxklfJedlz0QAAf7QF3cE7QkY8lOgdsUbAyJLAhyZH8R7DB4VwdpscjfJHlyMtvpo+KybwdVcD4IouCZLiISIeB6HmD6UtldGgaVPCUbS4z81TZU5FzKP1YavfP3RXcVcKT4YK2HJhtOExXr8OD+Ie/3UNJb3MSLNIIZEULluKsB39ad3VtHdR6H5jkR0pTLsm4Q/j0yDscH5qVtDoxKjQYrIVPg0TGSWKO3NvA281HLyYwOwFE7GgLSSSnygaf6aiDZErEGZgi9QDk04iiSGMRxjCinopdnDuMA+CaiEnTP/2Q=="
+//     },
+//     {
+//         "id": "53896db2-e7dc-4df2-a4ce-a786a885ce8b",
+//         "text": "VASSILIEFF Nina",
+//         "ext":"Caisse Centrale de la MSA- C10460",
+//         "img": "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAgAB4DASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAABAUBAgMG/8QAKhAAAgEDAQYGAwEAAAAAAAAAAQIDAAQREgUTITFBYSIyUYGh4SNCcZH/xAAYAQADAQEAAAAAAAAAAAAAAAAAAgMBBP/EABwRAAIDAAMBAAAAAAAAAAAAAAECAAMREhMhMf/aAAwDAQACEQMRAD8A7W5uVtwoxqdvKvrQxklfJedlz0QAAf7QF3cE7QkY8lOgdsUbAyJLAhyZH8R7DB4VwdpscjfJHlyMtvpo+KybwdVcD4IouCZLiISIeB6HmD6UtldGgaVPCUbS4z81TZU5FzKP1YavfP3RXcVcKT4YK2HJhtOExXr8OD+Ie/3UNJb3MSLNIIZEULluKsB39ad3VtHdR6H5jkR0pTLsm4Q/j0yDscH5qVtDoxKjQYrIVPg0TGSWKO3NvA281HLyYwOwFE7GgLSSSnygaf6aiDZErEGZgi9QDk04iiSGMRxjCinopdnDuMA+CaiEnTP/2Q=="
+//     }
+// ];
+        data.selected_user = $('#inputSearchPersonne').select_user({
+            data: data.users,
+            faIcon: 'fas fa-user-plus',
+            label: 'Rechercher la personne dans notre base de données ...',
+            autocomplete: {
+                minLength: 2,
+                limit: 30,
+            },
+            done: function(e) {
+                console.log(e);
+                // TODO : Maintenant, il faut enregistrer cet utilisateur, 
+                //          pour le codeId en cours, dans la base, 
+                //          puis l'afficher dans le tableau des utilisateurs
+        
+                
+            },
+            afterLimit: function(nb, total) {
+                console.log(nb, total);
+            }
+        });
+
+
+        
+    };
+    
+    data.drawActionsBlock = function()
+    {
+        var html = '';
+
+        html += drawBtn( 'retour', '<?= base_url() ?>dev_tools/rolesspecifiques' );
+        //si le edit est égale à edit alors les boutons enregister et annuler doivent être présent
+        //sinon le bouton modifier doit être présent
+        //afficher le bouton annuler que si il y a un roleId
+        if (this.edit == 'edit'){
+
+            html += drawBtn( 'enregistrer');
+        if (this.roleId != '')
+        { html += drawBtn( 'annuler' );}
+        }    
+        else{
+            html += drawBtn( 'modifier' );
+        }
+
+        $( '#actionsBlock' ).html( html );
+    };
+
+    data.getFields = function() 
+    {
+        this.fields = [];
+
+        <?php // Le champ identifiant ?>
+        this.fields.push({
+           'id'         : 'id',
+           'type'       : 'text',
+           'value'      : this.role.hasOwnProperty('id') ? this.role.id : '',
+           'label'      : 'identifiant',
+           'required'   : true,
+           'maxlength'  : 20,
+           'colWidth'   : 3,
+           'endRow'     : false,
+           'disabled'   : (this.roleId == '' && this.edit == 'edit')?false:true 
+        });
+        
+        <?php // Le champ Active ?>
+        this.fields.push({
+           'id'         : 'active',
+           'type'       : 'checkbox',
+           'value'      : this.role.hasOwnProperty('active') ? parseInt(this.role.active) : 1,
+           'label'      : 'Actif ?',
+           'required'   : false,
+           'colWidth'   : 3,
+           'beginRow'   : false,
+           'disabled'   : (this.edit == 'edit')?false:true 
+        });
+
+        <?php // Le champ dateCreation ?>
+        this.fields.push({
+           'id'         : 'dateCreation',
+           'type'       : 'date',
+           'value'      : this.role.hasOwnProperty('dateCreation') ? this.role.dateCreation : '',
+           'label'      : 'Date de création',
+           'required'   : false,
+           'colWidth'   : 3,
+           'endRow'     : false,
+           'disabled'   : true
+        });
+
+        <?php // Le champ createdBy ?>
+        this.fields.push({
+           'id'         : 'createdBy',
+           'type'       : 'personne',
+           'value'      : this.role.hasOwnProperty('createdBy') ? this.role.createdBy : '',
+           'label'      : 'Créé par',
+           'required'   : false,
+           'colWidth'   : 3,
+           'beginRow'   : false,
+           'endRow'     : false,
+           'disabled'   : false
+        });
+
+        <?php // Le champ dateLastUpdate ?>
+        this.fields.push({
+           'id'         : 'dateLastUpdate',
+           'type'       : 'date',
+           'value'      : this.role.hasOwnProperty('dateLastUpdate') ? this.role.dateLastUpdate : '',
+           'label'      : 'Date de dernière modification',
+           'required'   : false,
+           'colWidth'   : 3,
+           'beginRow'   : false,
+           'endRow'     : false,
+           'disabled'   : true
+        });
+
+        <?php // Le champ lastUpdateBy ?>
+        this.fields.push({
+           'id'         : 'lastUpdateBy',
+           'type'       : 'personne',
+           'value'      : this.role.hasOwnProperty('lastUpdateBy') ? this.role.lastUpdateBy : '',
+           'label'      : 'Dernière modification par',
+           'required'   : false,
+           'colWidth'   : 3,
+           'beginRow'   : false,
+           'disabled'   : false
+        });
+
+
+    };
+
+    data.drawFields = function()
+    {
+        var html = '';
+        for( var i = 0 ; i < this.fields.length ; i++ )
+        {
+            var f = new field;
+            for( var key in this.fields[i] )
+            {
+                f[key] = this.fields[i][key];
+            }
+            html += f.getHtml();
+        }
+        $( '#<?= $container ?> .content' ).html( html ).promise().done( function()
+        {
+            data.loadMaxLength();
+            M.updateTextFields();
+        });
+    };
+
+    data.drawApps = function()
+    {
+        var html = '';
+        if( this.applications )
+        {
+            html += '<ul class="collection">';
+            for( var i = 0 ; i < this.applications.length ; i++ )
+            {
+                html += '<li class="collection-item">' +
+                            '<div class="row">' +
+                                '<div class="col s2">' +
+                                    '<span class="title">' + this.applications[i].code + ' : </span>'+
+                                '</div><div class="col s10">';
+                                    if( parseInt(this.applications[i].active) !== 1 ){ html += '<del>'; }
+                                    html += '<span>' + this.applications[i].nom + '</span>';
+                                    if( parseInt(this.applications[i].active) !== 1 ){ html += '</del>'; }
+                html+=      '</div>'+
+                        '</li>';
+            }
+            html += '</ul>';
+        }
+        else
+        {
+            html += '<i>Aucune application liée à cette page...</i>';
+        }
+        $( '#applicationsContainer .content' ).html( html );
+    };
+
+    data.drawPageTitle = function()
+    {
+        var html = '';
+
+        if( this.roleId === 0 )
+        {
+            html += ' - Nouvelle Page';
+        }
+        else
+        {
+            html += ' - Page ' + this.code;
+        }
+
+        $( '#pageName' ).html( html );
+    };
+
+    data.get = function()
+    {
+        this.role = {};
+        if( this.roleId == '0' || this.roleId == '' )
+        {
+            this.draw();
+        }
+        else
+        {
+            $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '<?= base_url() ?>dev_tools/rolesSpecifique/get/' + data.roleId,
+                beforeSend: function(x)
+                {
+                    if( x && x.overrideMimeType ){ x.overrideMimeType("application/j-son;charset=UTF-8"); }
+                },
+                success: function( result )
+                {
+                    console.log(result);
+                    if( result.status === 'success' )
+                    {
+                        data.role = result.role;
+                    }else
+                    {
+                        M.toast({html: 'Le rôle n\'existe pas.', displayLength:3000,  classes: 'rounded red lighten-2'});
+                        data.role = [];
+                    }
+                   
+                },
+                error: function( result )
+                {
+                    data.role = [];                   
+                }, 
+                complete: function( result ){
+                    data.draw();
+                }
+            });
+        }
+    };
+
+    data.draw = function()
+    {
+        this.getFields();
+        this.drawFields();
+        this.drawPageTitle();
+        this.drawActionsBlock();
+    };
+
+    data.validEdit = function(){
+        //console.log('clique sur le bouton modifier');
+        this.edit ='edit';
+        this.draw ();
+        
+    };
+    data.cancelEdit = function(){
+        this.edit = '';
+        this.draw ();
+    };
+
+    data.save = function(){
+        //recupérer les données d'identifiant, d'actif et codeId
+        let identifiant = checkField ('id', 'text');
+        // controle des données obligaoires
+        if(identifiant == ''){
+            M.toast({html: 'L\'identifiant doit être renseigné', displayLength:3000,  classes: 'rounded red lighten-2'});
+            return false;
+        }
+        // si on a ce qu'il faut
+        let d = {
+            id : data.roleId,
+            fields : [
+                {
+                    nom: 'id',
+                    valeur: identifiant
+                },
+                {
+                    nom: 'active',
+                    valeur: checkField ('active', 'checkbox')
+                }
+            ]
+
+        };
+        console.log(d);
+        $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '<?= base_url() ?>dev_tools/rolesSpecifique/save/',
+                data : d,
+                beforeSend: function(x)
+                {
+                    if( x && x.overrideMimeType ){ x.overrideMimeType("application/j-son;charset=UTF-8"); }
+                },
+                success: function( result )
+                {
+                    console.log(result);
+                    if( result.status === 'success' )
+                    {
+                        M.toast({html: 'La modification a été effectuée', displayLength:3000,  classes: 'rounded green lighten-2'});
+                        data.role = result.role;
+                        data.edit = '';
+                    }else
+                    {
+                        M.toast({html: 'Une erreur inatendue est arrivée', displayLength:3000,  classes: 'rounded red lighten-2'});
+                        data.role = [];
+                    }
+                
+                },
+                error: function( result )
+                {
+                    console.log(result);
+                    data.role = [];                   
+                }, 
+                complete: function( result ){
+                    data.draw();
+                }
+            });
+
+    };
+    data.getUtilisateurs = function () {
+        this.utilisateurs = {};
+        if( this.roleId == '0' || this.roleId == '' )
+        {
+            this.drawUtilisateurs();
+        }
+        else
+        {
+            $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '<?= base_url() ?>dev_tools/rolesSpecifique/getUtilisateurs/' + data.roleId,
+                beforeSend: function(x)
+                {
+                    if( x && x.overrideMimeType ){ x.overrideMimeType("application/j-son;charset=UTF-8"); }
+                },
+                success: function( result )
+                {
+                    console.log(result);
+                    if( result.status === 'success' )
+                    {
+                        data.utilisateurs = result.utilisateurs;
+                    }else
+                    {
+                        M.toast({html: 'Il n\'y a pas d\'utilisateurs.', displayLength:3000,  classes: 'rounded red lighten-2'});
+                        data.utilisateurs = [];
+                    }
+                   
+                },
+                error: function( result )
+                {
+                    data.utilisateurs = [];                   
+                }, 
+                complete: function( result ){
+                    data.drawUtilisateurs();
+                }
+            });
+        }
+
+    }
+
+    data.drawUtilisateurs = function () {
+    //console.log(role);
+    //s'il n'y a pas d'utilisateurs : afficher dans le tableau aucun utilisateurs trouvés
+       let html = ''; 
+       if (data.utilisateurs.length === 0) {
+        html = '<tr><td colspan="<?=$nbColumns?>" class="center-align">Il n\'y a pas d\'utilisateurs</td></tr>';
+    } else {
+        for (let i = 0; i < data.utilisateurs.length; i++) {
+            html += '<tr>' + 
+                '<td>' + data.utilisateurs[i].uid + '</td>' +
+                '<td>' + data.utilisateurs[i].nom + '</td>' +
+                '<td>' + data.utilisateurs[i].prenom + '</td>' +
+                '<td><a href="mailto:' + data.utilisateurs[i].email_pro + '?subject=Rôles%20spécifiques">' + data.utilisateurs[i].email_pro + '</a></td>' +
+                '<td>' + drawBtn('customTiny', '', {
+                    text: 'Supprimer',
+                    displayText: 1,
+                    icon: '<i class="fas fa-eraser"></i>',
+                    htmlAttr: 'button',
+                    cssClass: 'btn red white-text tooltipped',
+                    onClick: 'data.deleteUtilisateur(' + data.utilisateurs[i].id + ')'
+                }) + '</td>' +
+                '</tr>';
+        }
+    }
+
+    $('#<?= $tableId ?> tbody').html(html).promise().done(function(){
+        $('.tooltipped').tooltip();
+    });
+}
+data.deleteUtilisateur = function(id) {
+    $.ajax({
+        type: 'POST',
+        url: '<?= base_url() ?>../accueil/dev_tools/rolesSpecifique/deleteUtilisateur/' + id,  
+        beforeSend: function(x)
+                {
+                    if( x && x.overrideMimeType ){ x.overrideMimeType("application/j-son;charset=UTF-8"); }
+                },
+        success:function(result) {
+            console.log(result);
+            if (result.affected_rows != 0) {
+                M.toast({
+                    html: ' L\'utilisateur a été supprimé avec succès',
+                    displayLength: 3000,
+                    classes: 'rounded green lighten-2'
+                });
+                data.getUtilisateurs();
+            } else {
+                M.toast({
+                    html: 'Aucune suppression n\'a eu lieu',
+                    displayLength: 3000,
+                    classes: 'rounded red lighten-2'
+                });
+            }
+        },
+        error: function(result) {
+            console.log(result);
+            M.toast({
+                html: 'Une erreur est survenue lors de la suppression',
+                displayLength: 3000,
+                classes: 'rounded red lighten-2'
+            });
+        }
+    });
+};
+
+
+data.get_for_select_user = function(){
+        console.log(d);
+        $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '<?= base_url() ?>dev_tools/rolesSpecifique/get_for_select_user/',
+                data : d,
+                beforeSend: function(x)
+                {
+                    if( x && x.overrideMimeType ){ x.overrideMimeType("application/j-son;charset=UTF-8"); }
+                },
+                success: function( result )
+                {
+                    console.log(result);
+                    if( result.status === 'success' )
+                    {
+                        M.toast({html: 'L\'ajout de l\'utilisateur a réussi', displayLength:3000,  classes: 'rounded green lighten-2'});
+                        data.users = result.users;
+                    }else
+                    {
+                        M.toast({html: 'Une erreur inatendue est arrivée', displayLength:3000,  classes: 'rounded red lighten-2'});
+                        data.users = [];
+                    }
+                
+                },
+                error: function( result )
+                {
+                    console.log(result);
+                    data.users = [];                   
+                }, 
+                complete: function( result ){
+                    data.draw();
+                }
+            });
+
+    };
+</script>

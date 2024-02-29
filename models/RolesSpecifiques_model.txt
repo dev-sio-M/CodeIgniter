@@ -1,0 +1,61 @@
+<?php
+class RolesSpecifiques_model extends MSA_Model {
+    
+    // Obtenir un role par son ID
+        public function getRoleById($roleId = null) {
+            if( is_null($roleId) ) {
+                return false;
+            }
+    
+            $this->db->from('roles_specifiques');
+            $this->db->where('roles_specifiques.id',  $roleId);
+            $result = $this->getRichData( $this->db->get()->row());
+    
+            return $result;
+        }
+
+            // Obtenir tous les roles
+    public function getAllRoles() {
+        $this->db->select ('roleSpecifiqueId');
+        $this->db->select ('count(*) as nb',false);
+        $this->db->from ('roles_specifiques_utilisateurs');
+        $this->db->group_by ('roleSpecifiqueId');
+        $subQuery = $this->db->get_compiled_select();
+        $this->db->select ('*,coalesce(nb,0) as nb',false);
+        $this->db->from('roles_specifiques');
+        $this->db->join("($subQuery) as source",'roles_specifiques.id = source.roleSpecifiqueId','left');
+        $this->db->order_by('id', 'desc');  //desc ou asc 
+        $results = $this->getRichData( $this->db->get()->result());
+        return $results;
+    }
+
+    public function save($id, $fields){
+        // $this->db->insert ('nom table', tableau associatif)
+       
+        $data = [] ;
+        $data ['dateLastUpdate' ] = date("Y-m-d H:i:s");
+        $data ['lastUpdateBy' ] = $this->loggedUser['username_uuid'];
+        foreach($fields as $field){
+             switch ($field ['nom']){
+                case 'id' : 
+                    $data ['id'] = $field ['valeur'];
+                    break;
+                
+                case 'active' : 
+                    $data ['active'] = intval( $field ['valeur']) == 0 ?0:1;
+                    break;
+             }
+        }
+        if($id == ''){
+            $data ['dateCreation' ] = date("Y-m-d H:i:s");
+            $data ['createdBy' ] = $this->loggedUser['username_uuid'];
+            $this->db->insert('roles_specifiques', $data);
+            $id = $data ['id'];
+        }else {
+            $this->db->where('id',$id)->update('roles_specifiques', $data);
+        }
+        return $this->getRoleById($id);
+    }
+    
+
+}

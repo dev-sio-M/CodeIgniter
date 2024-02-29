@@ -1,0 +1,132 @@
+<?php if(!defined('BASEPATH')){ exit('No direct script access allowed'); }
+
+class rolesSpecifique extends MSA_Controller
+{
+    function __construct()
+    {
+        parent::__construct();
+        $this->loadRemap = true;
+    }
+    // ------------------------------------------------------------------------
+
+    public function index( $roleId = null)
+    {
+        $this->data['pageTitle'] = 'Rôle specifique';
+
+        // Chargement du code du thème en cours
+        $this->data['roleId'] = $roleId;
+        // s'il n'y a pas de roleId, alors, on définit le mode d'édition à 'edit'
+        // sinon, on définit le mode d'édition à false
+        if( $this->data['roleId'] == null )
+        {
+            $this->data['edit'] = 'edit';
+        }
+        else
+        {
+            $this->data['edit'] =  false;
+        }
+        $this->data['permissions'] = $this->permissions->check( $this->controller_name, $this->action_name, $this->data['userData'] );
+
+        $this->data['container'] = 'pageContainer';
+        $this->load->model('RolesSpecifiques_model');
+        $this->data['ajoutPossible'] = $this->RolesSpecifiques_model->mayAddUtilisateur();
+        $this->data['users']       = $this->RolesSpecifiques_model->get_for_select_user();
+        // Breadcrumb
+        $this->breadcrumb->add( isset($this->data['app']->nom) ? $this->data['app']->nom : APPCODE, '/' );
+        $this->breadcrumb->add( 'Dev. Tools', 'dev_tools', true );
+        $this->breadcrumb->add( 'Rôles specifiques', 'rolesSpecifiques', true );
+        $this->breadcrumb->add( $roleId );
+        $this->data['breadcrumb'] = $this->breadcrumb->output( $this->data['frameworkCss'] );
+
+        $this->launchView( 'devTools/'.$this->data['frameworkCss'].'_rolesSpecifique', $this->data );
+    }
+    // ------------------------------------------------------------------------
+
+    public function get( $roleId = null )
+    {
+        $this->prepareAjaxPage();
+
+        $this->load->model( 'RolesSpecifiques_model' );
+        // redéfinition de pageCode
+        $roleId = ($roleId == '' || $roleId == '0')?null:$roleId;
+
+        $this->responseArray['role']           = $this->RolesSpecifiques_model->getRoleById( $roleId );
+        $this->responseArray['status']         = ( !$this->responseArray['role'] )?'error':'success';
+
+        echo json_encode( $this->responseArray );
+    }
+    // ------------------------------------------------------------------------
+
+    /**
+     * fonction vide
+     * La modification est impossible.
+     * Tout se fait par migration
+     */
+    public function save()
+    {
+         $this->prepareAjaxPage();
+         $id =  $this->input->post('id');
+         $fields =  $this->input->post('fields');
+         $this->load->model( 'RolesSpecifiques_model' );
+         $resultat = $this->RolesSpecifiques_model->save($id, $fields);
+         if(!$resultat){
+            $this->responseArray['role'] = [];
+            $this->responseArray['status'] = 'error';
+         }else{
+            $this->responseArray['role'] = $resultat;
+            $this->responseArray['status'] = 'success';
+         }
+         echo json_encode( $this->responseArray );
+    }
+    // ------------------------------------------------------------------------
+
+    public function getUtilisateurs($id)
+    {
+        $this->prepareAjaxPage();
+         //$id =  $this->input->post('id');
+         $this->load->model( 'RolesSpecifiques_model' );
+         $resultat = $this->RolesSpecifiques_model->getUtilisateursByRoleId($id);
+         if(!$resultat){
+            $this->responseArray['utilisateurs'] = [];
+            $this->responseArray['status'] = 'error';
+         }else{
+            $this->responseArray['utilisateurs'] = $resultat;
+            $this->responseArray['status'] = 'success';
+         }
+         echo json_encode( $this->responseArray );
+    }
+    // ------------------------------------------------------------------------
+
+    public function deleteUtilisateur($id)
+    {
+        $this->prepareAjaxPage();
+        $this->load->model( 'RolesSpecifiques_model' );
+        $affected_rows = $this->RolesSpecifiques_model->deleteUtilisateur(intval ($id));
+        $this->responseArray['id']=$id;
+        $this->responseArray['affected_rows'] = $affected_rows;
+        if(!$affected_rows){
+            $this->responseArray['status'] = 'error';
+         }else{
+            $this->responseArray['status'] = 'success';
+         }
+        echo json_encode($this->responseArray);
+    }
+    // ------------------------------------------------------------------------
+
+    public function get_for_select_user($id)
+    {
+        $this->prepareAjaxPage();
+        $id =  $this->input->post('id');
+        $fields =  $this->input->post('fields');
+        $this->load->model( 'RolesSpecifiques_model' );
+        $resultat = $this->RolesSpecifiques_model->get_for_select_user($id, $fields);
+        if(!$resultat){
+           $this->responseArray['role'] = [];
+           $this->responseArray['status'] = 'error';
+        }else{
+           $this->responseArray['role'] = $resultat;
+           $this->responseArray['status'] = 'success';
+        }
+        echo json_encode( $this->responseArray );
+    }
+}

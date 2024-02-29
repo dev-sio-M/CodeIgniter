@@ -1,0 +1,23 @@
+<?php
+if (!defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
+class RolesSpecifiques extends MSA_Controller
+{
+    public function index()
+    {
+        $this->data['pageTitle'] = 'Rôles spécifiques';
+
+        // Breadcrumb
+        $this->breadcrumb->add(isset($this->data['app']->nom) ? $this->data['app']->nom : APPCODE, '/');
+        $this->breadcrumb->add('Outils développeurs', 'dev_tools', true);
+        $this->breadcrumb->add('Rôles spécifiques');
+        $this->data['breadcrumb'] = $this->breadcrumb->output($this->data['frameworkCss']);
+        $this->data['tableId'] = 'rolesSpecifiques';
+        $this->data['fileName'] = 'rolesSpecifiques';
+
+        $this->load->model('RolesSpecifiques_model');
+        $this->data['roles'] = $this->RolesSpecifiques_model->getAllRoles();
+        $this->launchView('devTools/' . $this->data['frameworkCss'] . '_rolesSpecifiques', $this->data);
+    }
+}
